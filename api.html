@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fake Account Predictor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: #fff;
+      padding: 25px 30px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+      width: 320px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #333;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 12px;
+    }
+    input {
+      width: 100%;
+      padding: 8px 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      background: #4CAF50;
+      border: none;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    #result {
+      margin-top: 20px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 16px;
+      color: #333;
+    }
+    #result.error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Fake Account Predictor</h2>
+    <form id="accountForm">
+      <label>Username:</label>
+      <input type="text" id="username" required>
+      
+      <label>Followers:</label>
+      <input type="number" id="followers" required>
+      
+      <label>Following:</label>
+      <input type="number" id="following" required>
+      
+      <label>Posts:</label>
+      <input type="number" id="posts" required>
+      
+      <label>Bio Length:</label>
+      <input type="number" id="bio_length" required>
+      
+      <button type="submit">Check Account</button>
+    </form>
+    <div id="result"></div>
+  </div>    
+
+  <script>
+    document.getElementById("accountForm").addEventListener("submit", async function(event) {
+      event.preventDefault();
+
+      const data = {
+        username: document.getElementById("username").value.trim(),
+        followers: parseInt(document.getElementById("followers").value),
+        following: parseInt(document.getElementById("following").value),
+        posts: parseInt(document.getElementById("posts").value),
+        bio_length: parseInt(document.getElementById("bio_length").value)
+      };
+
+      const resultDiv = document.getElementById("result");
+      resultDiv.textContent = "Checking...";
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+        const result = await response.json();
+
+        resultDiv.classList.remove("error");
+        resultDiv.innerHTML = `
+          <p>Prediction: <b>${result.prediction}</b></p>
+          <p>Fake Probability: ${result.probability_fake}</p>
+        `;
+      } catch (error) {
+        resultDiv.classList.add("error");
+        resultDiv.textContent = "Error: Could not reach server. Make sure FastAPI is running.";
+        console.error(error);
+      }
+    });
+  </script>
+</body>
+</html>
